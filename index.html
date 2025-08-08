@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PizzaLingua - Learn Italian</title>
+    <style>
+        body {
+            margin: 0;
+            background: #fceecf;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        canvas {
+            background-color: #fff8dc;
+            border: 4px solid #c0392b;
+        }
+        #wordDisplay {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>🍕 PizzaLingua: Italian Snake Game</h1>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div id="wordDisplay">Ready to learn some Italian?</div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const tileSize = 20;
+        let mouse = [{ x: 100, y: 100 }];
+        let direction = "RIGHT";
+        let pizza = spawnPizza();
+        let italianWords = [
+            { word: "Formaggio", translation: "Cheese", audio: "formaggio.mp3" },
+            { word: "Pomodoro", translation: "Tomato", audio: "pomodoro.mp3" },
+            { word: "Pane", translation: "Bread", audio: "pane.mp3" }
+        ];
+        let currentWord = getRandomWord();
+
+        function spawnPizza() {
+            return {
+                x: Math.floor(Math.random() * (canvas.width / tileSize)) * tileSize,
+                y: Math.floor(Math.random() * (canvas.height / tileSize)) * tileSize
+            };
+        }
+
+        function getRandomWord() {
+            return italianWords[Math.floor(Math.random() * italianWords.length)];
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "brown";
+            for (let part of mouse) {
+                ctx.fillRect(part.x, part.y, tileSize, tileSize);
+            }
+            ctx.fillStyle = "red";
+            ctx.fillRect(pizza.x, pizza.y, tileSize, tileSize);
+        }
+
+        function moveMouse() {
+            const head = { ...mouse[0] };
+            if (direction === "RIGHT") head.x += tileSize;
+            else if (direction === "LEFT") head.x -= tileSize;
+            else if (direction === "UP") head.y -= tileSize;
+            else if (direction === "DOWN") head.y += tileSize;
+            mouse.unshift(head);
+
+            if (head.x === pizza.x && head.y === pizza.y) {
+                playWordAudio(currentWord.audio);
+                showWord(currentWord);
+                currentWord = getRandomWord();
+                pizza = spawnPizza();
+            } else {
+                mouse.pop();
+            }
+        }
+
+        function showWord(word) {
+            document.getElementById("wordDisplay").innerText =
+                word.word + " - " + word.translation;
+        }
+
+        function playWordAudio(filename) {
+            const audio = new Audio("audio/" + filename);
+            audio.play();
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+            else if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+            else if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+            else if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+        });
+
+        function gameLoop() {
+            moveMouse();
+            draw();
+        }
+
+        setInterval(gameLoop, 150);
+    </script>
+
+<div style="margin-top: 40px; width: 600px; text-align: left;">
+    <h2>🧠 Flashcards</h2>
+    <div id="flashcard" style="padding: 20px; background: #fff; border: 2px solid #c0392b; border-radius: 8px;">
+        <strong>Click to flip</strong>
+        <div id="flashcard-content" style="margin-top: 10px;">Formaggio</div>
+    </div>
+
+    <h2 style="margin-top: 30px;">❓ Quiz</h2>
+    <div id="quiz">
+        <p id="quiz-question">What is 'Pomodoro' in English?</p>
+        <button onclick="checkAnswer('Tomato')">Tomato</button>
+        <button onclick="checkAnswer('Cheese')">Cheese</button>
+        <button onclick="checkAnswer('Bread')">Bread</button>
+        <p id="quiz-feedback"></p>
+    </div>
+
+    <h2 style="margin-top: 30px;">📈 Progress</h2>
+    <div id="progress">Words learned: <span id="progress-count">0</span></div>
+</div>
+
+<script>
+    let progressCount = 0;
+    function showWord(word) {
+        document.getElementById("wordDisplay").innerText =
+            word.word + " - " + word.translation;
+        progressCount++;
+        document.getElementById("progress-count").innerText = progressCount;
+    }
+
+    // Flashcard logic
+    const flashcardWords = [
+        { front: "Formaggio", back: "Cheese" },
+        { front: "Pomodoro", back: "Tomato" },
+        { front: "Pane", back: "Bread" }
+    ];
+    let currentFlashcard = 0;
+    let flipped = false;
+    const flashcardElement = document.getElementById("flashcard");
+    const flashcardContent = document.getElementById("flashcard-content");
+
+    flashcardElement.addEventListener("click", () => {
+        flipped = !flipped;
+        const word = flashcardWords[currentFlashcard];
+        flashcardContent.innerText = flipped ? word.back : word.front;
+        if (flipped) {
+            currentFlashcard = (currentFlashcard + 1) % flashcardWords.length;
+            flipped = false;
+        }
+    });
+
+    // Quiz logic
+    function checkAnswer(answer) {
+        const feedback = document.getElementById("quiz-feedback");
+        if (answer === "Tomato") {
+            feedback.innerText = "Correct! 🍅";
+            progressCount++;
+        } else {
+            feedback.innerText = "Try again!";
+        }
+        document.getElementById("progress-count").innerText = progressCount;
+    }
+</script>
+</body>
+
+</html>
